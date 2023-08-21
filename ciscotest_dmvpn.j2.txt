@@ -1,0 +1,3 @@
+{% for int,int_value in  parsed_show_dmvpn.interfaces.items() %}
+Tunnel {{ int }} has {{int_value.nhrp_peers}} nhrp peers.
+{% endfor %}
