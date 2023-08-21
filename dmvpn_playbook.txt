@@ -1,0 +1,48 @@
+- hosts: Cisco_ios_XE_devices
+  gather_facts: no
+  connection: network_cli
+  roles:
+    - clay584.parse_genie
+  vars:
+    ansible_user: xxxx
+    ansible_password: xxxxx
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    ansible_network_os: ios
+    ansible_become: yes
+    ansible_become_method: enable
+    ansible_become_password: xxxxx
+    ansible_command_timeout: 1200
+    Make: Cisco
+  tasks:
+    - name: Retrieve NHRP peers per VRF tunnel
+      ios_command:
+        commands:
+          - show dmvpn
+      register: show_tunnels
+    - name: Print Show dmvpn Output
+      debug:
+        var: show_tunnels
+
+    - name: Print show dmvpn output
+      debug:
+        var: show_tunnels.stdout_lines
+
+    - name: Debug Genie Filter
+      set_fact:
+         parsed_show_dmvpn: "{{ show_tunnels.stdout[0] | parse_genie(command='show dmvpn', os='ios') }}"
+      delegate_to: localhost
+    - name: Print Genie Output
+      debug:
+        var: parsed_show_dmvpn
+    - name: Save parsed output in a file
+      copy:
+        content: "{{ parsed_show_dmvpn }}"
+        dest: /home/abc/xyz/dmvpn_tunnels
+    - name: Create file
+      template:
+       src: ciscotest_dmvpn.j2
+       dest: "/home/abc/xyz/inventory/{{inventory_hostname}}-details"
+       mode: 0744
+      connection: local
+      ignore_errors: yes
+
